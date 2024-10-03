@@ -1,0 +1,52 @@
+body {
+    font-family: Arial, sans-serif;
+  }  
+
+.silhouette {
+    filter: brightness(0) invert(1); /* Rend l'image noire pour donner une silhouette */
+    opacity: 0.5;
+    transition: filter 0.5s ease, opacity 0.5s ease;
+  }
+  
+  .full-color {
+    filter: none;
+    opacity: 1;
+    transition: filter 0.5s ease, opacity 0.5s ease;
+  }
+  
+  .pokemon-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    padding-bottom: 80px; /* Espace en bas pour éviter que le dernier élément soit masqué */
+
+  }
+  
+  .pokemon-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd; /* Séparer chaque Pokémon par une ligne */
+    padding: 10px;
+  }
+  
+  .pokemon-list img {
+    width: 80px; /* Taille réduite de l'artwork */
+    height: auto;
+  }
+  
+  .pokemon-info {
+    flex: 1;
+    margin-left: 10px;
+  }
+  
+  .pokemon-name {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .pokemon-types {
+    font-size: 14px;
+    color: #666;
+  }
+  

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import './NavigationButtons.css'; // Assure-toi d'importer le fichier CSS
 
 const NavigationButtons = () => {
   const navigate = useNavigate();

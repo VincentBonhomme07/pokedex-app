@@ -2,23 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import './Pokedex.css';
 
 const Pokedex = () => {
   const [pokemonList, setPokemonList] = useState([]);
+  const [capturedPokemon, setCapturedPokemon] = useState([]);
+  const [seenPokemon, setSeenPokemon] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // Hook pour la navigation
 
-  // Fonction pour récupérer les détails d'un Pokémon (nom, sprite, types en français)
   const fetchPokemonDetails = async (pokemon, index) => {
     try {
       const response = await axios.get(pokemon.url.replace('pokemon', 'pokemon-species'));
       const speciesData = response.data;
 
-      // Récupérer le nom en français
       const nameInFrench = speciesData.names.find(
         (nameEntry) => nameEntry.language.name === 'fr'
       );
 
-      // Récupérer les types du Pokémon
       const pokemonResponse = await axios.get(pokemon.url);
       const typesInFrench = await Promise.all(
         pokemonResponse.data.types.map(async (typeEntry) => {
@@ -26,15 +28,15 @@ const Pokedex = () => {
           const typeName = typeResponse.data.names.find(
             (nameEntry) => nameEntry.language.name === 'fr'
           );
-          return typeName ? typeName.name : typeEntry.type.name; // Types en français
+          return typeName ? typeName.name : typeEntry.type.name;
         })
       );
 
       return {
-        number: index + 1, // Numéro du Pokémon
-        name: nameInFrench ? nameInFrench.name : pokemon.name, // Nom en français
-        sprite: pokemonResponse.data.sprites.other['official-artwork'].front_default, // Sprite du Pokémon
-        types: typesInFrench, // Types en français
+        number: index + 1,
+        name: nameInFrench ? nameInFrench.name : pokemon.name,
+        sprite: pokemonResponse.data.sprites.other['official-artwork'].front_default,
+        types: typesInFrench,
       };
     } catch (error) {
       console.error('Erreur lors du chargement des détails Pokémon:', error);
@@ -45,10 +47,9 @@ const Pokedex = () => {
   useEffect(() => {
     const fetchPokemonList = async () => {
       try {
-        const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=721'); // Jusqu'à 721 Pokémon
+        const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=721');
         const pokemonResults = response.data.results;
 
-        // Récupérer les détails de chaque Pokémon
         const pokemonDetailsPromises = pokemonResults.map((pokemon, index) =>
           fetchPokemonDetails(pokemon, index)
         );
@@ -65,6 +66,35 @@ const Pokedex = () => {
     fetchPokemonList();
   }, []);
 
+  const toggleCapture = (pokemonNumber) => {
+    setCapturedPokemon((prevCaptured) => {
+      if (prevCaptured.includes(pokemonNumber)) {
+        return prevCaptured.filter((number) => number !== pokemonNumber);
+      } else {
+        return [...prevCaptured, pokemonNumber];
+      }
+    });
+  };
+
+  const toggleSeen = (pokemonNumber) => {
+    setSeenPokemon((prevSeen) => {
+      if (prevSeen.includes(pokemonNumber)) {
+        return prevSeen.filter((number) => number !== pokemonNumber); // Marquer comme non vu
+      } else {
+        return [...prevSeen, pokemonNumber]; // Marquer comme vu
+      }
+    });
+  };
+
+  const handleMouseDown = (pokemonNumber) => {
+    const timer = setTimeout(() => {
+      toggleSeen(pokemonNumber);
+    }, 1000);
+
+    const handleMouseUp = () => clearTimeout(timer);
+    document.addEventListener('mouseup', handleMouseUp, { once: true });
+  };
+
   if (loading) {
     return <p>Chargement en cours...</p>;
   }
@@ -72,16 +102,28 @@ const Pokedex = () => {
   return (
     <div>
       <h1>Pokédex</h1>
-      <ul>
+      <p>Total des Pokémon vus : {seenPokemon.length}</p>
+      <p>Total des Pokémon capturés : {capturedPokemon.length}</p>
+      <ul className="pokemon-list">
         {pokemonList.map((pokemon) => (
-          <li key={pokemon.number}>
-            <p>#{pokemon.number} {pokemon.name}</p>
-            <img src={pokemon.sprite} alt={pokemon.name} />
-            {/* Ajout d'une vérification pour éviter l'erreur join */}
-            <p>{pokemon.types ? pokemon.types.join(', ') : 'Types non disponibles'}</p>
-          </li>
-        ))}
-      </ul>
+        <li key={pokemon.number} onClick={() => navigate(`/pokemon/${pokemon.number}`)}> {/* Redirection vers la page de détails */}
+        <img
+              src={pokemon.sprite}  
+              alt={pokemon.name}
+              className={seenPokemon.includes(pokemon.number) ? 'full-color' : 'silhouette'}
+              onMouseDown={() => handleMouseDown(pokemon.number)}
+            />
+            <div className="pokemon-info">
+              <p className="pokemon-name">#{pokemon.number} {pokemon.name}</p>
+              <p className="pokemon-types">{pokemon.types ? pokemon.types.join(', ') : 'Types non disponibles'}</p>
+            </div>
+      <button onClick={() => toggleCapture(pokemon.number)}>
+        {capturedPokemon.includes(pokemon.number) ? 'Libérer' : 'Capturer'}
+      </button>
+    </li>
+  ))}
+</ul>
+
     </div>
   );
 };
